@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	reg = regexp.MustCompile("^[a-zA-Z0-9]*$")
+	reg = regexp.MustCompile("^[a-zA-Z0-9_]*$")
 )
 
 // XmlmcInstStruct is the struct that contains all the data for a NewXmlmcInstance
@@ -27,7 +27,7 @@ type XmlmcInstStruct struct {
 
 // NewXmlmcInstance creates a new xmlc instance. You must pass in the url you are trying to connect to
 // and a new instance is returned.
-// conn := esp_xmlmc.NewXmlmcInstance("https://eurapi.hornbill.com/jahantest/xmlmc/")
+// conn := esp_xmlmc.NewXmlmcInstance("https://eurapi.hornbill.com/test/xmlmc/")
 func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 	ndb := new(XmlmcInstStruct)
 	ndb.server = servername
@@ -102,7 +102,9 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	}
 	// If we have a new EspSessionId set it
 	SessionIds := strings.Split(resp.Header.Get("Set-Cookie"), ";")
-	xmlmc.sessionID = SessionIds[0]
+	if SessionIds[0] != "" {
+		xmlmc.sessionID = SessionIds[0]
+	}
 
 	xmlmc.paramsxml = ""
 	return string(body), nil

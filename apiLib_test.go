@@ -14,12 +14,13 @@ var setParamTests = []struct {
 }{
 	{"User", "admin", ""},
 	{"Password", "12345678", ""},
-	{"User_name", "blank", "Name invalid only Numbers and letters can be used"},
+	{"User_name", "blank", ""},
 	{"", "blank", "Name Must contain at least one letter or number"},
 	{"!\"£$", "blank", "Name invalid only Numbers and letters can be used"},
 	{"User2", "!c\"dw", ""},
 	{"User3", "<![CDATA[!\"£$%^&*]]>", ""},
 	{"co1character", "", ""},
+	{"h_site_name", "", ""},
 }
 
 func TestSetParam(t *testing.T) {
@@ -72,7 +73,7 @@ var setElementTests = []struct {
 }{
 	{"User", ""},
 	{"Password", ""},
-	{"User_name", "Element invalid only Numbers and letters can be used"},
+	{"User_name", ""},
 	{"", "Element must have at least one letter or number"},
 	{"!\"£$", "Element invalid only Numbers and letters can be used"},
 	{"User2", ""},

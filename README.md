@@ -62,7 +62,7 @@ Go Hornbill API lib
 	        if err != nil {
 	                fmt.Println(err)
 	        }
-	        err = conn.SetParam("password", base64.StdEncoding.EncodeToString([]byte("Dem0User")))
+	        err = conn.SetParam("password", base64.StdEncoding.EncodeToString([]byte("password")))
 	        if err != nil {
 	                fmt.Println(err)
 	        }

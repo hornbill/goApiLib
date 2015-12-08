@@ -67,7 +67,6 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	if len(xmlmc.paramsxml) == 0 {
 		xmlmclocal = xmlmclocal + "</methodCall>"
 	} else {
-		xmlmclocal = xmlmclocal + "</params>" + "</methodCall>"
 		xmlmclocal = xmlmclocal + "<params>" + xmlmc.paramsxml
 		xmlmclocal = xmlmclocal + "</params>" + "</methodCall>"
 	}

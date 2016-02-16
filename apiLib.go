@@ -90,7 +90,7 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	client := &http.Client{Timeout: duration}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", errors.New("API Request Failed")
+		return "", err
 	}
 	xmlmc.statuscode = resp.StatusCode
 

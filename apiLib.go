@@ -87,7 +87,10 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 		req.Header.Add("Accept", "Application/json")
 	}
 	duration := time.Second * time.Duration(xmlmc.timeout)
-	client := &http.Client{Timeout: duration}
+	t := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+	}
+	client := &http.Client{Transport: t, Timeout: duration}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err

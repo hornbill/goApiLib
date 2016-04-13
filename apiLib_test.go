@@ -53,6 +53,15 @@ func TestJSONResponse(t *testing.T) {
 	}
 
 }
+func SetAPIKey(t *testing.T) {
+	conn := NewXmlmcInstance("test")
+	// set to true and test it is
+	conn.SetAPIKey("testing1234567")
+	if conn.apiKey != "testing1234567" {
+		t.Errorf("conn.jsonresp should be true but is %t\n", conn.jsonresp)
+	}
+
+}
 
 func TestSessionID(t *testing.T) {
 

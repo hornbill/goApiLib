@@ -22,6 +22,7 @@ type XmlmcInstStruct struct {
 	statuscode int
 	timeout    int
 	sessionID  string
+	apiKey     string
 	jsonresp   bool
 }
 
@@ -82,6 +83,9 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	}
 
 	req.Header.Set("Content-Type", "text/xmlmc")
+	if xmlmc.apiKey != "" {
+		req.Header.Add("Authorization", "ESP-APIKEY "+xmlmc.apiKey)
+	}
 	req.Header.Add("Cookie", xmlmc.sessionID)
 	if xmlmc.jsonresp == true {
 		req.Header.Add("Accept", "Application/json")
@@ -123,6 +127,12 @@ func (xmlmc *XmlmcInstStruct) SetJSONResponse(b bool) {
 // sessID := conn.GetSessionID()
 func (xmlmc *XmlmcInstStruct) GetSessionID() string {
 	return xmlmc.sessionID
+}
+
+// SetAPIKey sets the current APIKey for this XmlmcInstance it expects a a string to be passed
+// conn.SetAPIKey()
+func (xmlmc *XmlmcInstStruct) SetAPIKey(s string) {
+	xmlmc.apiKey = s
 }
 
 // SetSessionID sets the current ESPsessionID for this XmlmcInstance it expects a a string to be passed

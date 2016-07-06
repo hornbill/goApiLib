@@ -57,7 +57,7 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 		//-- Else look it up
 		ndb.server = GetEndPointFromName(servername)
 	}
-	ndb.server = servername
+
 	ndb.timeout = 30
 	ndb.jsonresp = false
 	return ndb

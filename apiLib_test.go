@@ -144,6 +144,14 @@ func TestGetClearParams(t *testing.T) {
 		t.Errorf("was expecting empty but got %s\n", conn.GetParam())
 	}
 }
+func TestGetZoneInfo(t *testing.T) {
+	conn := NewXmlmcInstance("hornbill")
+
+	if conn.server != "https://betaapi.hornbill.com/hornbill/" {
+		t.Errorf("Was expecting https://betaapi.hornbill.com/hornbill/ but got %s\n", conn.server)
+	}
+
+}
 
 var invokeTests = []struct {
 	status    int

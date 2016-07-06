@@ -26,7 +26,7 @@ var setParamTests = []struct {
 func TestSetParam(t *testing.T) {
 
 	for _, tt := range setParamTests {
-		conn := NewXmlmcInstance("test")
+		conn := NewXmlmcInstance("https://devapi.hornbill.com/test/")
 		err := conn.SetParam(tt.tagName, "blank")
 		if err != nil {
 			if tt.out != err.Error() {
@@ -42,7 +42,7 @@ func TestSetParam(t *testing.T) {
 }
 
 func TestJSONResponse(t *testing.T) {
-	conn := NewXmlmcInstance("test")
+	conn := NewXmlmcInstance("https://devapi.hornbill.com/test/")
 	if conn.jsonresp != false {
 		t.Errorf("conn.jsonresp should be false but is %t\n", conn.jsonresp)
 	}
@@ -54,7 +54,7 @@ func TestJSONResponse(t *testing.T) {
 
 }
 func SetAPIKey(t *testing.T) {
-	conn := NewXmlmcInstance("test")
+	conn := NewXmlmcInstance("https://devapi.hornbill.com/test/")
 	// set to true and test it is
 	conn.SetAPIKey("testing1234567")
 	if conn.apiKey != "testing1234567" {
@@ -65,7 +65,7 @@ func SetAPIKey(t *testing.T) {
 
 func TestSessionID(t *testing.T) {
 
-	conn := NewXmlmcInstance("test")
+	conn := NewXmlmcInstance("https://devapi.hornbill.com/test/")
 	if conn.GetSessionID() != "" {
 		t.Errorf("conn.GetSessionID() should be blank")
 	}
@@ -91,7 +91,7 @@ var setElementTests = []struct {
 func TestOpenElements(t *testing.T) {
 
 	for _, tt := range setElementTests {
-		conn := NewXmlmcInstance("test")
+		conn := NewXmlmcInstance("https://devapi.hornbill.com/test/")
 		err := conn.OpenElement(tt.tagName)
 		if err != nil {
 			if tt.out != err.Error() {
@@ -108,7 +108,7 @@ func TestOpenElements(t *testing.T) {
 func TestCloseElements(t *testing.T) {
 
 	for _, tt := range setElementTests {
-		conn := NewXmlmcInstance("test")
+		conn := NewXmlmcInstance("https://devapi.hornbill.com/test/")
 		err := conn.CloseElement(tt.tagName)
 		if err != nil {
 			if tt.out != err.Error() {
@@ -123,7 +123,7 @@ func TestCloseElements(t *testing.T) {
 }
 
 func TestTimeout(t *testing.T) {
-	conn := NewXmlmcInstance("test")
+	conn := NewXmlmcInstance("https://devapi.hornbill.com/test/")
 	if conn.timeout != 30 {
 		t.Errorf("Was expecting timeout defualt of 30")
 	}
@@ -134,7 +134,7 @@ func TestTimeout(t *testing.T) {
 }
 
 func TestGetClearParams(t *testing.T) {
-	conn := NewXmlmcInstance("test")
+	conn := NewXmlmcInstance("https://devapi.hornbill.com/test/")
 	_ = conn.SetParam("stage", "1")
 	if conn.GetParam() != "<params><stage>1</stage></params>" {
 		t.Errorf("Was expecting %s but got %s\n", `this`, conn.GetParam())

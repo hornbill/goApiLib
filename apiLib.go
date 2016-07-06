@@ -2,9 +2,12 @@ package apiLib
 
 import (
 	"bytes"
+	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -26,15 +29,80 @@ type XmlmcInstStruct struct {
 	jsonresp   bool
 }
 
+// ZoneInfoStrut is used to contain the instance zone info data
+type ZoneInfoStrut struct {
+	Zoneinfo struct {
+		Name     string `json:"name"`
+		Zone     string `json:"zone"`
+		Message  string `json:"message"`
+		Endpoint string `json:"endpoint"`
+	} `json:"zoneinfo"`
+}
+
 // NewXmlmcInstance creates a new xmlc instance. You must pass in the url you are trying to connect to
 // and a new instance is returned.
 // conn := esp_xmlmc.NewXmlmcInstance("https://eurapi.hornbill.com/test/xmlmc/")
 func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 	ndb := new(XmlmcInstStruct)
+	//-- TK Add Support for passing in instance name
+	matchedURL, err := regexp.MatchString(`(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?`, servername)
+	//-- Catch Error
+	if err != nil {
+		log.Fatal("Unable to Parse server Name")
+	}
+	//-- If URL then just use it
+	if matchedURL {
+		ndb.server = servername
+	} else {
+		//-- Else look it up
+		ndb.server = GetEndPointFromName(servername)
+	}
 	ndb.server = servername
 	ndb.timeout = 30
 	ndb.jsonresp = false
 	return ndb
+}
+
+// GetEndPointFromName takes an instanceID anf returns a engpoint URL
+// looks up json config from https://files.hornbill.com/instances/instanceID/zoneinfo
+// serverEndpoint := GetEndPointFromName(servername)
+func GetEndPointFromName(instanceID string) string {
+	instanceEndpoint := ""
+
+	//-- Get JSON Config
+	response, err := http.Get("https://files.hornbill.com/instances/" + instanceID + "/zoneinfo")
+	if err != nil || response.StatusCode != 200 {
+
+		//-- If we fail fall over to using files.hornbill.co
+		response, err = http.Get("https://files.hornbill.co/instances/" + instanceID + "/zoneinfo")
+
+		//-- If we still have an error then return out
+		if err != nil {
+			log.Println("Error Loading Zone Info File: " + fmt.Sprintf("%v", err))
+			return ""
+		}
+	}
+	//-- Close Connection
+	defer response.Body.Close()
+
+	//-- New Decoder
+	decoder := json.NewDecoder(response.Body)
+
+	//-- New Var based on ZoneInfoStrut
+	zoneInfo := ZoneInfoStrut{}
+
+	//-- Decode JSON
+	errDECODE := decoder.Decode(&zoneInfo)
+
+	//-- Error Checking
+	if errDECODE != nil {
+		log.Println("Error Decoding Zone Info File: " + fmt.Sprintf("%v", errDECODE))
+		return ""
+	}
+
+	//-- Get Endpoint from URL
+	instanceEndpoint = zoneInfo.Zoneinfo.Endpoint
+	return instanceEndpoint
 }
 
 // SetParam Sets the paramters in an already instantiated NewXmlmcInstance connection.
@@ -102,6 +170,14 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	xmlmc.statuscode = resp.StatusCode
 
 	defer resp.Body.Close()
+
+	//-- Check for HTTP Response
+	if resp.StatusCode != 200 {
+		errorString := fmt.Sprintf("Invalid HTTP Response: %d", resp.StatusCode)
+		err = errors.New(errorString)
+		return "", err
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.New("Cant read the body of the response")

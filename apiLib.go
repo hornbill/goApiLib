@@ -45,7 +45,7 @@ type ZoneInfoStrut struct {
 func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 	ndb := new(XmlmcInstStruct)
 	//-- TK Add Support for passing in instance name
-	matchedURL, err := regexp.MatchString(`(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?`, servername)
+	matchedURL, err := regexp.MatchString(`(?i)(http|https)(?-i):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?`, servername)
 	//-- Catch Error
 	if err != nil {
 		log.Fatal("Unable to Parse server Name")

@@ -145,10 +145,20 @@ func TestGetClearParams(t *testing.T) {
 	}
 }
 func TestGetZoneInfo(t *testing.T) {
-	conn := NewXmlmcInstance("hornbill")
 
+	conn := NewXmlmcInstance("hornbill")
 	if conn.server != "https://betaapi.hornbill.com/hornbill/" {
 		t.Errorf("Was expecting https://betaapi.hornbill.com/hornbill/ but got %s\n", conn.server)
+	}
+
+	conn = NewXmlmcInstance("hTTps://betaapi.hornbill.com/hornbill/")
+	if conn.server != "hTTps://betaapi.hornbill.com/hornbill/" {
+		t.Errorf("Was expecting hTTps://betaapi.hornbill.com/hornbill/ but got %s\n", conn.server)
+	}
+
+	conn = NewXmlmcInstance("NoInstanceNameHERE")
+	if conn.server != "" {
+		t.Errorf("Was expecting empty but got %s\n", conn.server)
 	}
 
 }

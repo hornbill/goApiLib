@@ -1,5 +1,12 @@
 Go Hornbill API lib
 ========
+
+Integration
+===
+Various Hornbill Integration methods are documeted here: https://wiki.hornbill.com/index.php/Integration
+
+Documentation
+===
 	package main
 
 	import (

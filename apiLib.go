@@ -26,6 +26,7 @@ type XmlmcInstStruct struct {
 	timeout    int
 	sessionID  string
 	apiKey     string
+	trace      string
 	jsonresp   bool
 }
 
@@ -101,7 +102,7 @@ func GetEndPointFromName(instanceID string) string {
 	}
 
 	//-- Get Endpoint from URL
-	instanceEndpoint = zoneInfo.Zoneinfo.Endpoint
+	instanceEndpoint = zoneInfo.Zoneinfo.Endpoint + "xmlmc/"
 	return instanceEndpoint
 }
 
@@ -132,7 +133,13 @@ func (xmlmc *XmlmcInstStruct) SetParam(strName string, varValue string) error {
 // result, err := conn.Invoke("session", "userLogon")
 func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (string, error) {
 
-	xmlmclocal := "<methodCall service=\"" + servicename + "\" method=\"" + methodname + "\">"
+	//-- Add Api Tracing
+	tracename := ""
+	if xmlmc.trace != "" {
+		tracename = "/" + tracename
+	}
+
+	xmlmclocal := "<methodCall service=\"" + servicename + "\" method=\"" + methodname + "\" trace=\"goApi" + tracename + "\">"
 	if len(xmlmc.paramsxml) == 0 {
 		xmlmclocal = xmlmclocal + "</methodCall>"
 	} else {
@@ -140,7 +147,7 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 		xmlmclocal = xmlmclocal + "</params>" + "</methodCall>"
 	}
 
-	strURL := xmlmc.server + "/" + servicename + "/"
+	strURL := xmlmc.server + "/" + servicename + "/?method=" + methodname
 
 	var xmlmcstr = []byte(xmlmclocal)
 
@@ -156,7 +163,7 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	}
 	req.Header.Add("Cookie", xmlmc.sessionID)
 	if xmlmc.jsonresp == true {
-		req.Header.Add("Accept", "Application/json")
+		req.Header.Add("Accept", "text/json")
 	}
 	duration := time.Second * time.Duration(xmlmc.timeout)
 	t := &http.Transport{
@@ -215,6 +222,12 @@ func (xmlmc *XmlmcInstStruct) SetAPIKey(s string) {
 // conn.SetSessionID()
 func (xmlmc *XmlmcInstStruct) SetSessionID(s string) {
 	xmlmc.sessionID = s
+}
+
+// SetTrace sets the current Trace to goAPI/STRING for this XmlmcInstance it expects a a string to be passed
+// conn.SetTrace()
+func (xmlmc *XmlmcInstStruct) SetTrace(s string) {
+	xmlmc.trace = s
 }
 
 // GetStatusCode returns the http status code for the last invoked xmlmc call.

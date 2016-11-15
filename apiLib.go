@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -28,6 +29,8 @@ type XmlmcInstStruct struct {
 	apiKey     string
 	trace      string
 	jsonresp   bool
+	userAgent  string
+	transport  *http.Transport
 }
 
 // ZoneInfoStrut is used to contain the instance zone info data
@@ -58,7 +61,11 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 		//-- Else look it up
 		ndb.server = GetEndPointFromName(servername)
 	}
+	ndb.transport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+	}
 
+	ndb.userAgent = "Go-http-client/1.1"
 	ndb.timeout = 30
 	ndb.jsonresp = false
 	return ndb
@@ -161,15 +168,13 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	if xmlmc.apiKey != "" {
 		req.Header.Add("Authorization", "ESP-APIKEY "+xmlmc.apiKey)
 	}
+	req.Header.Set("User-Agent", xmlmc.userAgent)
 	req.Header.Add("Cookie", xmlmc.sessionID)
 	if xmlmc.jsonresp == true {
 		req.Header.Add("Accept", "text/json")
 	}
 	duration := time.Second * time.Duration(xmlmc.timeout)
-	t := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-	}
-	client := &http.Client{Transport: t, Timeout: duration}
+	client := &http.Client{Transport: xmlmc.transport, Timeout: duration}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -182,6 +187,8 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	if resp.StatusCode != 200 {
 		errorString := fmt.Sprintf("Invalid HTTP Response: %d", resp.StatusCode)
 		err = errors.New(errorString)
+		//Drain the body so we can reuse the connection
+		io.Copy(ioutil.Discard, resp.Body)
 		return "", err
 	}
 
@@ -300,4 +307,10 @@ func (xmlmc *XmlmcInstStruct) GetParam() string {
 // conn.ClearParam()
 func (xmlmc *XmlmcInstStruct) ClearParam() {
 	xmlmc.paramsxml = ""
+}
+
+// SetUserAgent Sets a new userAgent to be passed in so we can identify who is sending the requests
+// conn.SetUserAgent("Ldap import tool")
+func (xmlmc *XmlmcInstStruct) SetUserAgent(ua string) {
+	xmlmc.userAgent = ua
 }

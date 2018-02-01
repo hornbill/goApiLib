@@ -148,7 +148,7 @@ func TestGetZoneInfo(t *testing.T) {
 
 	conn := NewXmlmcInstance("hornbill")
 	if conn.server != "https://betaapi.hornbill.com/hornbill/xmlmc/" {
-		t.Errorf("Was expecting https://betaapi.hornbill.com/hornbill/xmlmc/ but got %s\n", conn.server)
+		t.Errorf("Was expecting https://betaapi.hornbill.com/hornbill/ but got %s\n", conn.server)
 	}
 
 	conn = NewXmlmcInstance("hTTps://betaapi.hornbill.com/hornbill/")

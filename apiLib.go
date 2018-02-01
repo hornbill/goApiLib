@@ -21,16 +21,17 @@ var (
 
 // XmlmcInstStruct is the struct that contains all the data for a NewXmlmcInstance
 type XmlmcInstStruct struct {
-	server     string
-	paramsxml  string
-	statuscode int
-	timeout    int
-	sessionID  string
-	apiKey     string
-	trace      string
-	jsonresp   bool
-	userAgent  string
-	transport  *http.Transport
+	server      string
+	DavEndpoint string
+	paramsxml   string
+	statuscode  int
+	timeout     int
+	sessionID   string
+	apiKey      string
+	trace       string
+	jsonresp    bool
+	userAgent   string
+	transport   *http.Transport
 }
 
 // ZoneInfoStrut is used to contain the instance zone info data
@@ -59,7 +60,12 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 		ndb.server = servername
 	} else {
 		//-- Else look it up
-		ndb.server = GetEndPointFromName(servername)
+		serverURL := GetEndPointFromName(servername)
+		if serverURL != "" {
+			ndb.server = serverURL + "xmlmc/"
+			ndb.DavEndpoint = serverURL + "dav/"
+		}
+
 	}
 	ndb.transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -77,6 +83,9 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 func GetEndPointFromName(instanceID string) string {
 	instanceEndpoint := ""
 
+	if instanceID == "" {
+		return ""
+	}
 	//-- Get JSON Config
 	response, err := http.Get("https://files.hornbill.com/instances/" + instanceID + "/zoneinfo")
 	if err != nil || response.StatusCode != 200 {
@@ -109,7 +118,7 @@ func GetEndPointFromName(instanceID string) string {
 	}
 
 	//-- Get Endpoint from URL
-	instanceEndpoint = zoneInfo.Zoneinfo.Endpoint + "xmlmc/"
+	instanceEndpoint = zoneInfo.Zoneinfo.Endpoint
 	return instanceEndpoint
 }
 
@@ -132,6 +141,78 @@ func (xmlmc *XmlmcInstStruct) SetParam(strName string, varValue string) error {
 	}
 	xmlmc.paramsxml = xmlmc.paramsxml + "<" + strName + ">" + cleaned + "</" + strName + ">"
 	return nil
+}
+
+// InvokeGetResponse is the call that performs the xml call.
+// You pass it the servince name and the methodname as strings.
+// It returns the body of the response as a string the http response headers and an error which should be checked
+// result, err := conn.Invoke("session", "userLogon")
+func (xmlmc *XmlmcInstStruct) InvokeGetResponse(servicename string, methodname string) (string, http.Header, error) {
+
+	//-- Add Api Tracing
+	tracename := ""
+	if xmlmc.trace != "" {
+		tracename = "/" + tracename
+	}
+
+	xmlmclocal := "<methodCall service=\"" + servicename + "\" method=\"" + methodname + "\" trace=\"goApi" + tracename + "\">"
+	if len(xmlmc.paramsxml) == 0 {
+		xmlmclocal = xmlmclocal + "</methodCall>"
+	} else {
+		xmlmclocal = xmlmclocal + "<params>" + xmlmc.paramsxml
+		xmlmclocal = xmlmclocal + "</params>" + "</methodCall>"
+	}
+
+	strURL := xmlmc.server + "/" + servicename + "/?method=" + methodname
+
+	var xmlmcstr = []byte(xmlmclocal)
+
+	req, err := http.NewRequest("POST", strURL, bytes.NewBuffer(xmlmcstr))
+
+	if err != nil {
+		return "", nil, errors.New("Unable to create http request in esp_xmlmc.go")
+	}
+
+	req.Header.Set("Content-Type", "text/xmlmc")
+	if xmlmc.apiKey != "" {
+		req.Header.Add("Authorization", "ESP-APIKEY "+xmlmc.apiKey)
+	}
+	req.Header.Set("User-Agent", xmlmc.userAgent)
+	req.Header.Add("Cookie", xmlmc.sessionID)
+	if xmlmc.jsonresp == true {
+		req.Header.Add("Accept", "text/json")
+	}
+	duration := time.Second * time.Duration(xmlmc.timeout)
+	client := &http.Client{Transport: xmlmc.transport, Timeout: duration}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", nil, err
+	}
+	xmlmc.statuscode = resp.StatusCode
+
+	defer resp.Body.Close()
+	//-- Check for HTTP Response
+	if resp.StatusCode != 200 {
+		errorString := fmt.Sprintf("Invalid HTTP Response: %d", resp.StatusCode)
+		err = errors.New(errorString)
+		//Drain the body so we can reuse the connection
+		io.Copy(ioutil.Discard, resp.Body)
+		return "", nil, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", nil, errors.New("Cant read the body of the response")
+	}
+	// If we have a new EspSessionId set it
+	SessionIds := strings.Split(resp.Header.Get("Set-Cookie"), ";")
+
+	if SessionIds[0] != "" {
+		xmlmc.sessionID = SessionIds[0]
+	}
+
+	xmlmc.paramsxml = ""
+	return string(body), resp.Header, nil
 }
 
 // Invoke is the call that performs the xml call.

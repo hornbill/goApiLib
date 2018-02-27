@@ -26,6 +26,7 @@ type XmlmcInstStruct struct {
 	paramsxml   string
 	statuscode  int
 	timeout     int
+	count       uint64
 	sessionID   string
 	apiKey      string
 	trace       string
@@ -168,6 +169,7 @@ func (xmlmc *XmlmcInstStruct) InvokeGetResponse(servicename string, methodname s
 	var xmlmcstr = []byte(xmlmclocal)
 
 	req, err := http.NewRequest("POST", strURL, bytes.NewBuffer(xmlmcstr))
+	xmlmc.count++
 
 	if err != nil {
 		return "", nil, errors.New("Unable to create http request in esp_xmlmc.go")
@@ -240,6 +242,7 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	var xmlmcstr = []byte(xmlmclocal)
 
 	req, err := http.NewRequest("POST", strURL, bytes.NewBuffer(xmlmcstr))
+	xmlmc.count++
 
 	if err != nil {
 		return "", errors.New("Unable to create http request in esp_xmlmc.go")
@@ -394,4 +397,12 @@ func (xmlmc *XmlmcInstStruct) ClearParam() {
 // conn.SetUserAgent("Ldap import tool")
 func (xmlmc *XmlmcInstStruct) SetUserAgent(ua string) {
 	xmlmc.userAgent = ua
+}
+
+// GetCount Allows you to get the Count of API Calls that have been made.
+// It returns a string of the xml
+// xmlmc := conn.GetCount()
+func (xmlmc *XmlmcInstStruct) GetCount() uint64 {
+
+	return xmlmc.count
 }

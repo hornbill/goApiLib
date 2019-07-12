@@ -59,6 +59,7 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 	//-- If URL then just use it
 	if matchedURL {
 		ndb.server = servername
+		ndb.DavEndpoint = strings.Replace(servername, "/xmlmc/", "/dav/", 1)
 	} else {
 		//-- Else look it up
 		serverURL := GetEndPointFromName(servername)
@@ -319,6 +320,12 @@ func (xmlmc *XmlmcInstStruct) SetSessionID(s string) {
 // conn.SetTrace()
 func (xmlmc *XmlmcInstStruct) SetTrace(s string) {
 	xmlmc.trace = s
+}
+
+// GetServerURL returns the URL of the tenant used by the xmlmc call
+// server := conn.GetServerURL()
+func (xmlmc *XmlmcInstStruct) GetServerURL() string {
+	return xmlmc.server
 }
 
 // GetStatusCode returns the http status code for the last invoked xmlmc call.

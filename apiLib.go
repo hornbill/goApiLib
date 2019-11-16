@@ -22,6 +22,7 @@ var (
 // XmlmcInstStruct is the struct that contains all the data for a NewXmlmcInstance
 type XmlmcInstStruct struct {
 	server      string
+	stream      string
 	DavEndpoint string
 	paramsxml   string
 	statuscode  int
@@ -42,6 +43,7 @@ type ZoneInfoStrut struct {
 		Zone     string `json:"zone"`
 		Message  string `json:"message"`
 		Endpoint string `json:"endpoint"`
+		Stream   string `json:"releaseStream"`
 	} `json:"zoneinfo"`
 }
 
@@ -62,12 +64,14 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 		ndb.DavEndpoint = strings.Replace(servername, "/xmlmc/", "/dav/", 1)
 	} else {
 		//-- Else look it up
-		serverURL := GetEndPointFromName(servername)
-		if serverURL != "" {
-			ndb.server = serverURL + "xmlmc/"
-			ndb.DavEndpoint = serverURL + "dav/"
+		serverZoneInfo := GetZoneInfo(servername)
+		if serverZoneInfo.Zoneinfo.Endpoint != "" {
+			ndb.server = serverZoneInfo.Zoneinfo.Endpoint + "xmlmc/"
+			ndb.DavEndpoint = serverZoneInfo.Zoneinfo.Endpoint + "dav/"
 		}
-
+		if serverZoneInfo.Zoneinfo.Stream != "" {
+			ndb.stream = serverZoneInfo.Zoneinfo.Stream
+		}
 	}
 	ndb.transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -79,14 +83,25 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 	return ndb
 }
 
-// GetEndPointFromName takes an instanceID anf returns a engpoint URL
+// GetEndPointFromName takes an instanceID anf returns a endpoint URL
 // looks up json config from https://files.hornbill.com/instances/instanceID/zoneinfo
 // serverEndpoint := GetEndPointFromName(servername)
 func GetEndPointFromName(instanceID string) string {
-	instanceEndpoint := ""
-
 	if instanceID == "" {
 		return ""
+	}
+	instanceZoneInfo := GetZoneInfo(instanceID)
+	return instanceZoneInfo.Zoneinfo.Endpoint
+}
+
+// GetZoneInfo takes an instance ID and returns zone information about the instance
+// looks up json config from https://files.hornbill.com/instances/instanceID/zoneinfo
+// instanceZoneInfo := GetZoneInfo(servername)
+func GetZoneInfo(instanceID string) ZoneInfoStrut {
+	//-- New Var based on ZoneInfoStrut
+	zoneInfo := ZoneInfoStrut{}
+	if instanceID == "" {
+		return zoneInfo
 	}
 	//-- Get JSON Config
 	response, err := http.Get("https://files.hornbill.com/instances/" + instanceID + "/zoneinfo")
@@ -98,7 +113,7 @@ func GetEndPointFromName(instanceID string) string {
 		//-- If we still have an error then return out
 		if err != nil {
 			log.Println("Error Loading Zone Info File: " + fmt.Sprintf("%v", err))
-			return ""
+			return zoneInfo
 		}
 	}
 	//-- Close Connection
@@ -107,21 +122,15 @@ func GetEndPointFromName(instanceID string) string {
 	//-- New Decoder
 	decoder := json.NewDecoder(response.Body)
 
-	//-- New Var based on ZoneInfoStrut
-	zoneInfo := ZoneInfoStrut{}
-
 	//-- Decode JSON
 	errDECODE := decoder.Decode(&zoneInfo)
 
 	//-- Error Checking
 	if errDECODE != nil {
 		log.Println("Error Decoding Zone Info File: " + fmt.Sprintf("%v", errDECODE))
-		return ""
+		return zoneInfo
 	}
-
-	//-- Get Endpoint from URL
-	instanceEndpoint = zoneInfo.Zoneinfo.Endpoint
-	return instanceEndpoint
+	return zoneInfo
 }
 
 // SetParam Sets the paramters in an already instantiated NewXmlmcInstance connection.
@@ -326,6 +335,12 @@ func (xmlmc *XmlmcInstStruct) SetTrace(s string) {
 // server := conn.GetServerURL()
 func (xmlmc *XmlmcInstStruct) GetServerURL() string {
 	return xmlmc.server
+}
+
+// GetServerStream returns the stream of the instance
+// stream := conn.GetServerStream
+func (xmlmc *XmlmcInstStruct) GetServerStream() string {
+	return xmlmc.stream
 }
 
 // GetStatusCode returns the http status code for the last invoked xmlmc call.

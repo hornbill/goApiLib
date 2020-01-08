@@ -47,6 +47,12 @@ type ZoneInfoStrut struct {
 	} `json:"zoneinfo"`
 }
 
+// ParamAttribStruct is used to set XML attribues on an XMLMC parameter
+type ParamAttribStruct struct {
+	Name  string
+	Value string
+}
+
 // NewXmlmcInstance creates a new xmlc instance. You must pass in the url you are trying to connect to
 // and a new instance is returned.
 // conn := esp_xmlmc.NewXmlmcInstance("https://eurapi.hornbill.com/test/xmlmc/")
@@ -151,6 +157,31 @@ func (xmlmc *XmlmcInstStruct) SetParam(strName string, varValue string) error {
 		return errors.New("Could not clean the varValue input")
 	}
 	xmlmc.paramsxml = xmlmc.paramsxml + "<" + strName + ">" + cleaned + "</" + strName + ">"
+	return nil
+}
+
+// SetParamAttr sets a parameter with attributes in an already instantiated NewXmlmcInstance connection.
+// returns an errors if this is unsuccesful
+// err := conn.SetParam("userId", "admin", yourAttribsArray)
+func (xmlmc *XmlmcInstStruct) SetParamAttr(strName string, varValue string, attribs []ParamAttribStruct) error {
+	//Make sure the tag is not empty
+	if len(strName) == 0 {
+		return errors.New("Name Must contain at least one letter or number")
+	}
+	//Make sure the tag is only letter ans number so it will create valid XML
+	if !reg.MatchString(strName) {
+		return errors.New("Name invalid only Numbers and letters can be used")
+	}
+	//Make sure the ivalues are valid for xml
+	cleaned, err := xmlEncodeString(varValue)
+	if err != nil {
+		return errors.New("Could not clean the varValue input")
+	}
+	xmlmc.paramsxml = xmlmc.paramsxml + "<" + strName
+	for _, v := range attribs {
+		xmlmc.paramsxml += " " + v.Name + "=\"" + v.Value + "\""
+	}
+	xmlmc.paramsxml = xmlmc.paramsxml + ">" + cleaned + "</" + strName + ">"
 	return nil
 }
 

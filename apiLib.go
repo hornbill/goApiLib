@@ -24,6 +24,7 @@ type XmlmcInstStruct struct {
 	server      string
 	stream      string
 	DavEndpoint string
+	FileError   error
 	paramsxml   string
 	statuscode  int
 	timeout     int
@@ -70,7 +71,11 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 		ndb.DavEndpoint = strings.Replace(servername, "/xmlmc/", "/dav/", 1)
 	} else {
 		//-- Else look it up
-		serverZoneInfo := GetZoneInfo(servername)
+		serverZoneInfo, ziErr := GetZoneInfo(servername)
+		ndb.FileError = ziErr
+		if ziErr != nil {
+			return ndb
+		}
 		if serverZoneInfo.Zoneinfo.Endpoint != "" {
 			ndb.server = serverZoneInfo.Zoneinfo.Endpoint + "xmlmc/"
 			ndb.DavEndpoint = serverZoneInfo.Zoneinfo.Endpoint + "dav/"
@@ -96,18 +101,18 @@ func GetEndPointFromName(instanceID string) string {
 	if instanceID == "" {
 		return ""
 	}
-	instanceZoneInfo := GetZoneInfo(instanceID)
+	instanceZoneInfo, _ := GetZoneInfo(instanceID)
 	return instanceZoneInfo.Zoneinfo.Endpoint
 }
 
 // GetZoneInfo takes an instance ID and returns zone information about the instance
 // looks up json config from https://files.hornbill.com/instances/instanceID/zoneinfo
 // instanceZoneInfo := GetZoneInfo(servername)
-func GetZoneInfo(instanceID string) ZoneInfoStrut {
+func GetZoneInfo(instanceID string) (ZoneInfoStrut, error) {
 	//-- New Var based on ZoneInfoStrut
 	zoneInfo := ZoneInfoStrut{}
 	if instanceID == "" {
-		return zoneInfo
+		return zoneInfo, errors.New("instanceid not provided")
 	}
 	//-- Get JSON Config
 	response, err := http.Get("https://files.hornbill.com/instances/" + instanceID + "/zoneinfo")
@@ -118,8 +123,8 @@ func GetZoneInfo(instanceID string) ZoneInfoStrut {
 
 		//-- If we still have an error then return out
 		if err != nil {
-			log.Println("Error Loading Zone Info File: " + fmt.Sprintf("%v", err))
-			return zoneInfo
+			log.Println("Error Loading Zone Info File: " + err.Error())
+			return zoneInfo, err
 		}
 	}
 	//-- Close Connection
@@ -133,10 +138,10 @@ func GetZoneInfo(instanceID string) ZoneInfoStrut {
 
 	//-- Error Checking
 	if errDECODE != nil {
-		log.Println("Error Decoding Zone Info File: " + fmt.Sprintf("%v", errDECODE))
-		return zoneInfo
+		log.Println("Error Decoding Zone Info File:", errDECODE.Error())
+		return zoneInfo, errDECODE
 	}
-	return zoneInfo
+	return zoneInfo, nil
 }
 
 // SetParam Sets the paramters in an already instantiated NewXmlmcInstance connection.
@@ -162,7 +167,7 @@ func (xmlmc *XmlmcInstStruct) SetParam(strName string, varValue string) error {
 
 // SetParamAttr sets a parameter with attributes in an already instantiated NewXmlmcInstance connection.
 // returns an errors if this is unsuccesful
-// err := conn.SetParam("userId", "admin", yourAttribsArray)
+// err := conn.SetParamAttr("userId", "admin", yourAttribsArray)
 func (xmlmc *XmlmcInstStruct) SetParamAttr(strName string, varValue string, attribs []ParamAttribStruct) error {
 	//Make sure the tag is not empty
 	if len(strName) == 0 {

@@ -147,13 +147,13 @@ func TestGetClearParams(t *testing.T) {
 func TestGetZoneInfo(t *testing.T) {
 
 	conn := NewXmlmcInstance("hornbill")
-	if conn.server != "https://betaapi.hornbill.com/hornbill/xmlmc/" {
-		t.Errorf("Was expecting https://betaapi.hornbill.com/hornbill/ but got %s\n", conn.server)
+	if conn.server != "https://hhq-p02-api.hornbill.com/hornbill/xmlmc/" {
+		t.Errorf("Was expecting https://hhq-p02-api.hornbill.com/hornbill/ but got %s\n", conn.server)
 	}
 
-	conn = NewXmlmcInstance("hTTps://betaapi.hornbill.com/hornbill/")
-	if conn.server != "hTTps://betaapi.hornbill.com/hornbill/" {
-		t.Errorf("Was expecting hTTps://betaapi.hornbill.com/hornbill/ but got %s\n", conn.server)
+	conn = NewXmlmcInstance("https://hhq-p02-api.hornbill.com/hornbill/")
+	if conn.server != "https://hhq-p02-api.hornbill.com/hornbill/" {
+		t.Errorf("Was expecting https://hhq-p02-api.hornbill.com/hornbill/ but got %s\n", conn.server)
 	}
 
 	conn = NewXmlmcInstance("NoInstanceNameHERE")
@@ -171,7 +171,7 @@ var invokeTests = []struct {
 }{
 	{200, false, true, `<?xml version="1.0" encoding="utf-8" ?><methodCallResult status="ok"><params><stageName>XMLMC Session Bind</stageName><nextStage>4</nextStage></params></methodCallResult>`},
 	{200, true, true, `{ "@status": true, "params": { "stageName": "XMLMC Session Bind", "nextStage": 4 } }`},
-	{500, false, true, `<?xml version="1.0" encoding="utf-8" ?><methodCallResult status="ok"><params><stageName>XMLMC Session Bind</stageName><nextStage>4</nextStage></params></methodCallResult>`},
+	{200, false, true, `<?xml version="1.0" encoding="utf-8" ?><methodCallResult status="ok"><params><stageName>XMLMC Session Bind</stageName><nextStage>4</nextStage></params></methodCallResult>`},
 	{200, false, false, `<?xml version="1.0" encoding="utf-8" ?><methodCallResult status="ok"><params><stageName>XMLMC Session Bind</stageName><nextStage>4</nextStage></params></methodCallResult>`},
 }
 

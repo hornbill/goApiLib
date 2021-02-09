@@ -199,7 +199,7 @@ func (xmlmc *XmlmcInstStruct) InvokeGetResponse(servicename string, methodname s
 	//-- Add Api Tracing
 	tracename := ""
 	if xmlmc.trace != "" {
-		tracename = "/" + tracename
+		tracename = "/" + xmlmc.trace
 	}
 
 	xmlmclocal := "<methodCall service=\"" + servicename + "\" method=\"" + methodname + "\" trace=\"goApi" + tracename + "\">"
@@ -272,7 +272,7 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 	//-- Add Api Tracing
 	tracename := ""
 	if xmlmc.trace != "" {
-		tracename = "/" + tracename
+		tracename = "/" + xmlmc.trace
 	}
 
 	xmlmclocal := "<methodCall service=\"" + servicename + "\" method=\"" + methodname + "\" trace=\"goApi" + tracename + "\">"

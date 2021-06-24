@@ -117,7 +117,11 @@ func GetZoneInfo(instanceID string) (ZoneInfoStrut, error) {
 	//-- Get JSON Config
 	response, err := http.Get("https://files.hornbill.com/instances/" + instanceID + "/zoneinfo")
 	if err != nil || response.StatusCode != 200 {
-		log.Println("Error Loading Zone Info File: " + err.Error())
+		if err != nil {
+			log.Println("Error Loading Zone Info File: " + err.Error())
+		} else {
+			log.Println("Unexpected status when attempting to load Zone Info from " + "https://files.hornbill.com/instances/" + instanceID + "/zoneinfo" + " : " + response.Status)
+		}
 		//-- If we fail fall over to using files.hornbill.co
 		response, err = http.Get("https://files.hornbill.co/instances/" + instanceID + "/zoneinfo")
 

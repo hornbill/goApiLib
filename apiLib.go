@@ -115,7 +115,15 @@ func GetZoneInfo(instanceID string) (ZoneInfoStrut, error) {
 		return zoneInfo, errors.New("instanceid not provided")
 	}
 	//-- Get JSON Config
-	response, err := http.Get("https://files.hornbill.com/instances/" + instanceID + "/zoneinfo")
+	trans := &http.Transport{Proxy: http.ProxyFromEnvironment}
+	cl := &http.Client{Transport: trans, Timeout: time.Second * 30}
+
+	req, err := http.NewRequest("GET", "https://files.hornbill.com/instances/"+instanceID+"/zoneinfo", nil)
+	if err != nil {
+		log.Println("Could not make request: " + err.Error())
+		return zoneInfo, err
+	}
+	response, err := cl.Do(req)
 	if err != nil || response.StatusCode != 200 {
 		if err != nil {
 			log.Println("Error Loading Zone Info File: " + err.Error())
@@ -123,7 +131,12 @@ func GetZoneInfo(instanceID string) (ZoneInfoStrut, error) {
 			log.Println("Unexpected status when attempting to load Zone Info from " + "https://files.hornbill.com/instances/" + instanceID + "/zoneinfo" + " : " + response.Status)
 		}
 		//-- If we fail fall over to using files.hornbill.co
-		response, err = http.Get("https://files.hornbill.co/instances/" + instanceID + "/zoneinfo")
+		req, err = http.NewRequest("GET", "https://files.hornbill.co/instances/"+instanceID+"/zoneinfo", nil)
+		if err != nil {
+			log.Println("Could not makre request: " + err.Error())
+			return zoneInfo, err
+		}
+		response, err = cl.Do(req)
 
 		//-- If we still have an error then return out
 		if err != nil {

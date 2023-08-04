@@ -97,12 +97,15 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 // GetEndPointFromName takes an instanceID anf returns a endpoint URL
 // looks up json config from https://files.hornbill.com/instances/instanceID/zoneinfo
 // serverEndpoint := GetEndPointFromName(servername)
-func GetEndPointFromName(instanceID string) string {
+func GetEndPointFromName(instanceID string) (string, error) {
 	if instanceID == "" {
-		return ""
+		return "", errors.New("instanceID is mandatory")
 	}
-	instanceZoneInfo, _ := GetZoneInfo(instanceID)
-	return instanceZoneInfo.Zoneinfo.Endpoint
+	instanceZoneInfo, err := GetZoneInfo(instanceID)
+	if err != nil {
+		return "", err
+	}
+	return instanceZoneInfo.Zoneinfo.Endpoint, nil
 }
 
 // GetZoneInfo takes an instance ID and returns zone information about the instance

@@ -1,12 +1,13 @@
-Go Hornbill API lib
-========
+# Go Hornbill API lib
 
-Integration
-===
-Various Hornbill Integration methods are documeted here: https://wiki.hornbill.com/index.php/Integration
 
-Documentation
-===
+## Integration
+
+Various Hornbill Integration methods are documented here: https://wiki.hornbill.com/index.php/Integration
+
+## Documentation
+
+```go
 	package main
 
 	import (
@@ -91,3 +92,4 @@ Documentation
 
 	        // CloseElement
 	}
+```

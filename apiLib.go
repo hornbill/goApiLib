@@ -87,7 +87,7 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 		Proxy: http.ProxyFromEnvironment,
 	}
 
-	ndb.userAgent = "Go-http-client/1.1"
+	ndb.userAgent = "Go-http-client/1.2.0"
 	ndb.timeout = 30
 	ndb.jsonresp = false
 	return ndb

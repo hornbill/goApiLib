@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
@@ -276,7 +275,7 @@ func (xmlmc *XmlmcInstStruct) InvokeGetResponse(servicename string, methodname s
 		return "", nil, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", nil, errors.New("Cant read the body of the response")
 	}

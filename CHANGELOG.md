@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v1.2.0
+
+**Changes**
+
+* Updated to skip transport if null
+
 ## v1.1.0
 
 **Changes**

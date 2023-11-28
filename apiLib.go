@@ -118,7 +118,9 @@ func GetZoneInfo(instanceID string) (ZoneInfoStrut, error) {
 		return zoneInfo, errors.New("instanceid not provided")
 	}
 	//-- Get JSON Config
-	trans := &http.Transport{Proxy: http.ProxyFromEnvironment}
+	var trans *http.Transport
+	trans = &http.Transport{Proxy: http.ProxyFromEnvironment}
+
 	cl := &http.Client{Transport: trans, Timeout: time.Second * 30}
 
 	req, err := http.NewRequest("GET", "https://files.hornbill.com/instances/"+instanceID+"/zoneinfo", nil)
@@ -251,7 +253,13 @@ func (xmlmc *XmlmcInstStruct) InvokeGetResponse(servicename string, methodname s
 		req.Header.Add("Accept", "text/json")
 	}
 	duration := time.Second * time.Duration(xmlmc.timeout)
-	client := &http.Client{Transport: xmlmc.transport, Timeout: duration}
+	var client *http.Client
+	if xmlmc.transport == nil {
+		log.Println("xmlmc.transport is nil")
+		client = &http.Client{Timeout: duration}
+	} else {
+		client = &http.Client{Transport: xmlmc.transport, Timeout: duration}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", nil, err
@@ -264,7 +272,7 @@ func (xmlmc *XmlmcInstStruct) InvokeGetResponse(servicename string, methodname s
 		errorString := fmt.Sprintf("Invalid HTTP Response: %d", resp.StatusCode)
 		err = errors.New(errorString)
 		//Drain the body so we can reuse the connection
-		io.Copy(ioutil.Discard, resp.Body)
+		io.Copy(io.Discard, resp.Body)
 		return "", nil, err
 	}
 
@@ -324,7 +332,27 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 		req.Header.Add("Accept", "text/json")
 	}
 	duration := time.Second * time.Duration(xmlmc.timeout)
-	client := &http.Client{Transport: xmlmc.transport, Timeout: duration}
+	var client *http.Client
+	if xmlmc.transport == nil {
+		log.Println("xmlmc.transport is nil")
+		client = &http.Client{Timeout: duration}
+	} else {
+		client = &http.Client{Transport: xmlmc.transport, Timeout: duration}
+	}
+	if req == nil {
+		log.Println("Endpoint:", strURL)
+		log.Println("Payload:", string(xmlmcstr))
+		log.Println("Transport:", fmt.Sprintf("%+v", xmlmc.transport))
+		log.Println("Duration:", duration)
+		return "", errors.New("req has a nil value")
+	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Panic caught:", err)
+		}
+	}()
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -338,11 +366,11 @@ func (xmlmc *XmlmcInstStruct) Invoke(servicename string, methodname string) (str
 		errorString := fmt.Sprintf("Invalid HTTP Response: %d", resp.StatusCode)
 		err = errors.New(errorString)
 		//Drain the body so we can reuse the connection
-		io.Copy(ioutil.Discard, resp.Body)
+		io.Copy(io.Discard, resp.Body)
 		return "", err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.New("Cant read the body of the response")
 	}

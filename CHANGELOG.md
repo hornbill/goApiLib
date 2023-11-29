@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v1.3.0
+
+**Changes**
+
+* Added support for new API endpoints
+
 ## v1.2.0
 
 **Changes**

@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const version = "1.3.0"
+
 var (
 	reg = regexp.MustCompile("^[a-zA-Z0-9_]*$")
 )
@@ -39,11 +41,14 @@ type XmlmcInstStruct struct {
 // ZoneInfoStrut is used to contain the instance zone info data
 type ZoneInfoStrut struct {
 	Zoneinfo struct {
-		Name     string `json:"name"`
-		Zone     string `json:"zone"`
-		Message  string `json:"message"`
-		Endpoint string `json:"endpoint"`
-		Stream   string `json:"releaseStream"`
+		Name        string `json:"name"`
+		Zone        string `json:"zone"`
+		Message     string `json:"message"`
+		Endpoint    string `json:"endpoint"`
+		APIEndpoint string `json:"apiEndpoint"`
+		DAVEndpoint string `json:"davEndpoint"`
+		WSEndpoint  string `json:"wsEndpoint"`
+		Stream      string `json:"releaseStream"`
 	} `json:"zoneinfo"`
 }
 
@@ -75,7 +80,10 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 		if ziErr != nil {
 			return ndb
 		}
-		if serverZoneInfo.Zoneinfo.Endpoint != "" {
+		if serverZoneInfo.Zoneinfo.APIEndpoint != "" {
+			ndb.server = serverZoneInfo.Zoneinfo.APIEndpoint
+			ndb.DavEndpoint = serverZoneInfo.Zoneinfo.DAVEndpoint
+		} else if serverZoneInfo.Zoneinfo.Endpoint != "" {
 			ndb.server = serverZoneInfo.Zoneinfo.Endpoint + "xmlmc/"
 			ndb.DavEndpoint = serverZoneInfo.Zoneinfo.Endpoint + "dav/"
 		}
@@ -87,7 +95,7 @@ func NewXmlmcInstance(servername string) *XmlmcInstStruct {
 		Proxy: http.ProxyFromEnvironment,
 	}
 
-	ndb.userAgent = "Go-http-client/1.2.0"
+	ndb.userAgent = "Go-http-client/" + version
 	ndb.timeout = 30
 	ndb.jsonresp = false
 	return ndb
@@ -103,6 +111,9 @@ func GetEndPointFromName(instanceID string) (string, error) {
 	instanceZoneInfo, err := GetZoneInfo(instanceID)
 	if err != nil {
 		return "", err
+	}
+	if instanceZoneInfo.Zoneinfo.APIEndpoint != "" {
+		return instanceZoneInfo.Zoneinfo.APIEndpoint, nil
 	}
 	return instanceZoneInfo.Zoneinfo.Endpoint, nil
 }
